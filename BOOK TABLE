@@ -1,0 +1,28 @@
+INSERT INTO books
+(title, author, category, price, stock)
+
+VALUES
+
+('Java Programming',
+'Herbert Schildt',
+'Programming',
+450,
+10),
+
+('Python Basics',
+'Mark Lutz',
+'Programming',
+400,
+8),
+
+('Data Science',
+'John Smith',
+'Data Science',
+550,
+5),
+
+('Artificial Intelligence',
+'Stuart Russell',
+'AI',
+650,
+6);
