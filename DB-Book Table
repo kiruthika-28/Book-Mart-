@@ -1,0 +1,15 @@
+CREATE TABLE books (
+
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    title VARCHAR(100),
+
+    author VARCHAR(100),
+
+    category VARCHAR(50),
+
+    price DOUBLE,
+
+    stock INT
+
+);
