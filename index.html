@@ -1,158 +1,252 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BookMart - Online Book Management</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-        }
+<title>BookMart - Online Book Management</title>
 
-        h1 {
-            text-align: center;
-        }
+<style>
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+body {
+    font-family: Arial, sans-serif;
+    margin: 30px;
+    background: #f5f5f5;
+}
 
-        th, td {
-            border: 1px solid black;
-            padding: 10px;
-            text-align: center;
-        }
+h1 {
+    text-align: center;
+}
 
-        button {
-            padding: 8px 15px;
-            cursor: pointer;
-        }
+.container {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+}
 
-        button:disabled {
-            cursor: not-allowed;
-        }
+input, select {
+    padding: 8px;
+    margin: 5px;
+}
 
-        #cart {
-            margin-top: 30px;
-        }
+button {
+    padding: 8px 15px;
+    margin: 5px;
+    cursor: pointer;
+}
 
-        #welcome {
-            font-weight: bold;
-        }
-    </style>
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #ddd;
+}
+
+#cart {
+    margin-top: 30px;
+}
+
+#welcome {
+    font-weight: bold;
+    color: green;
+}
+
+</style>
+
 </head>
 
 <body>
+
+<div class="container">
 
 <h1>BOOKMART - ONLINE BOOK MANAGEMENT</h1>
 
 <h2>Login</h2>
 
-<input type="text" id="username" placeholder="Username">
+<input type="text"
+       id="username"
+       placeholder="Username">
 
-<input type="password" id="password" placeholder="Password">
+<input type="password"
+       id="password"
+       placeholder="Password">
 
 <button onclick="login()">Login</button>
 
 <p id="welcome"></p>
 
+<hr>
+
 <h2>Available Books</h2>
 
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Action</th>
-        </tr>
-    </thead>
+<input type="text"
+       id="search"
+       placeholder="Search book..."
+       onkeyup="searchBooks()">
 
-    <tbody id="bookTable"></tbody>
+<table>
+
+<thead>
+
+<tr>
+
+<th>ID</th>
+<th>Title</th>
+<th>Author</th>
+<th>Category</th>
+<th>Price</th>
+<th>Stock</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="bookTable"></tbody>
+
 </table>
 
 <div id="cart">
 
-    <h2>Shopping Cart</h2>
+<h2>Shopping Cart</h2>
 
-    <ul id="cartList"></ul>
+<ul id="cartList"></ul>
 
-    <p id="total">Total: Rs.0</p>
+<p id="total">Total: Rs.0</p>
 
-    <button onclick="checkout()">Checkout</button>
+<button onclick="checkout()">
+Checkout
+</button>
+
+</div>
+
+<hr>
+
+<h2>Give Review</h2>
+
+<input type="number"
+       id="reviewBookId"
+       placeholder="Book ID">
+
+<select id="rating">
+
+<option value="5">5</option>
+<option value="4">4</option>
+<option value="3">3</option>
+<option value="2">2</option>
+<option value="1">1</option>
+
+</select>
+
+<input type="text"
+       id="comment"
+       placeholder="Your comment">
+
+<button onclick="submitReview()">
+Submit Review
+</button>
 
 </div>
 
 <script>
 
-let books = [
-    {
-        id: 1,
-        title: "Java Programming",
-        author: "Herbert Schildt",
-        category: "Programming",
-        price: 450,
-        stock: 10
-    },
-    {
-        id: 2,
-        title: "Python Basics",
-        author: "Mark Lutz",
-        category: "Programming",
-        price: 400,
-        stock: 8
-    },
-    {
-        id: 3,
-        title: "Data Science",
-        author: "John Smith",
-        category: "Data Science",
-        price: 550,
-        stock: 5
-    },
-    {
-        id: 4,
-        title: "Artificial Intelligence",
-        author: "Stuart Russell",
-        category: "AI",
-        price: 650,
-        stock: 6
-    }
-];
-
+let books = [];
 let cart = [];
+let currentUserId = null;
 
-function login() {
+async function loadBooks() {
 
-    let username =
+    try {
+
+        const response =
+            await fetch("/api/books");
+
+        books = await response.json();
+
+        displayBooks();
+
+    } catch (error) {
+
+        alert("Cannot connect to Java backend");
+
+    }
+}
+
+async function login() {
+
+    const username =
         document.getElementById("username").value;
 
-    if (username.trim() === "") {
+    const password =
+        document.getElementById("password").value;
 
-        alert("Please enter username");
+    if (username.trim() === "" ||
+        password.trim() === "") {
 
+        alert("Enter username and password");
         return;
     }
 
-    document.getElementById("welcome").innerText =
-        "Welcome " + username;
+    const data =
+        new URLSearchParams();
+
+    data.append("username", username);
+    data.append("password", password);
+
+    try {
+
+        const response =
+            await fetch("/api/login", {
+
+                method: "POST",
+
+                body: data
+
+            });
+
+        const result =
+            await response.json();
+
+        if (result.success) {
+
+            currentUserId = result.userId;
+
+            document.getElementById("welcome").innerText =
+                "Welcome " + result.username;
+
+            alert("Login successful");
+
+        } else {
+
+            alert(result.message);
+
+        }
+
+    } catch (error) {
+
+        alert("Backend connection failed");
+
+    }
 }
 
-function displayBooks() {
+function displayBooks(list = books) {
 
-    let table =
+    const table =
         document.getElementById("bookTable");
 
     table.innerHTML = "";
 
-    books.forEach(book => {
+    list.forEach(book => {
 
-        let row = table.insertRow();
+        const row =
+            table.insertRow();
 
         row.insertCell(0).innerText =
             book.id;
@@ -172,109 +266,253 @@ function displayBooks() {
         row.insertCell(5).innerText =
             book.stock;
 
-        let actionCell =
+        const action =
             row.insertCell(6);
 
-        let button =
+        const button =
             document.createElement("button");
 
-        button.innerText = "Add";
+        button.innerText =
+            book.stock > 0 ? "Add to Cart" : "Out of Stock";
 
-        button.onclick = function() {
+        button.disabled =
+            book.stock === 0;
 
-            addToCart(book.id);
+        button.onclick =
+            function() {
 
-        };
+                addToCart(book.id);
 
-        if (book.stock === 0) {
+            };
 
-            button.disabled = true;
-
-            button.innerText =
-                "Out of Stock";
-        }
-
-        actionCell.appendChild(button);
+        action.appendChild(button);
 
     });
 }
 
+function searchBooks() {
+
+    const search =
+        document.getElementById("search")
+        .value
+        .toLowerCase();
+
+    const result =
+        books.filter(book =>
+
+            book.title.toLowerCase().includes(search) ||
+
+            book.author.toLowerCase().includes(search) ||
+
+            book.category.toLowerCase().includes(search)
+
+        );
+
+    displayBooks(result);
+}
+
 function addToCart(id) {
 
-    let book =
+    const book =
         books.find(b => b.id === id);
 
-    if (book.stock <= 0) {
+    if (!book || book.stock <= 0) {
 
         alert("Book is out of stock");
-
         return;
     }
 
-    book.stock--;
+    const existing =
+        cart.find(item => item.id === id);
 
-    cart.push(book);
+    if (existing) {
 
-    displayBooks();
+        if (existing.quantity >= book.stock) {
+
+            alert("No more stock available");
+            return;
+        }
+
+        existing.quantity++;
+
+    } else {
+
+        cart.push({
+
+            id: book.id,
+            title: book.title,
+            price: book.price,
+            quantity: 1
+
+        });
+
+    }
 
     displayCart();
 }
 
 function displayCart() {
 
-    let cartList =
+    const cartList =
         document.getElementById("cartList");
-
-    let totalElement =
-        document.getElementById("total");
 
     cartList.innerHTML = "";
 
     let total = 0;
 
-    cart.forEach(book => {
+    cart.forEach(item => {
 
-        let li =
+        const li =
             document.createElement("li");
 
+        const subtotal =
+            item.price * item.quantity;
+
         li.innerText =
-            book.title +
-            " - Rs." +
-            book.price;
+            item.title +
+            " | Quantity: " +
+            item.quantity +
+            " | Rs." +
+            subtotal;
 
         cartList.appendChild(li);
 
-        total += book.price;
+        total += subtotal;
 
     });
 
-    totalElement.innerText =
+    document.getElementById("total")
+        .innerText =
         "Total: Rs." + total;
 }
 
-function checkout() {
+async function checkout() {
+
+    if (currentUserId === null) {
+
+        alert("Please login first");
+        return;
+    }
 
     if (cart.length === 0) {
 
         alert("Cart is empty");
-
         return;
     }
 
-    alert(
-        "Payment Successful!\n" +
-        "Thank you for shopping with BookMart."
-    );
+    let total = 0;
 
-    cart = [];
+    cart.forEach(item => {
 
-    displayCart();
+        total +=
+            item.price * item.quantity;
 
-    displayBooks();
+    });
+
+    const items =
+        cart.map(item =>
+            item.id + ":" + item.quantity
+        ).join(",");
+
+    const data =
+        new URLSearchParams();
+
+    data.append("userId", currentUserId);
+    data.append("total", total);
+    data.append("items", items);
+
+    try {
+
+        const response =
+            await fetch("/api/order", {
+
+                method: "POST",
+
+                body: data
+
+            });
+
+        const result =
+            await response.json();
+
+        if (result.success) {
+
+            alert(
+                "Payment Successful!\n" +
+                "Order Confirmed!"
+            );
+
+            cart = [];
+
+            displayCart();
+
+            loadBooks();
+
+        } else {
+
+            alert(result.message);
+
+        }
+
+    } catch (error) {
+
+        alert("Order failed");
+
+    }
 }
 
-displayBooks();
+async function submitReview() {
 
+    const bookId =
+        document.getElementById("reviewBookId")
+        .value;
+
+    const rating =
+        document.getElementById("rating")
+        .value;
+
+    const comment =
+        document.getElementById("comment")
+        .value;
+
+    if (bookId === "" ||
+        comment === "") {
+
+        alert("Enter book ID and comment");
+        return;
+    }
+
+    const data =
+        new URLSearchParams();
+
+    data.append("bookId", bookId);
+    data.append("rating", rating);
+    data.append("comment", comment);
+
+    try {
+
+        const response =
+            await fetch("/api/review", {
+
+                method: "POST",
+
+                body: data
+
+            });
+
+        const result =
+            await response.json();
+
+        alert(result.message);
+
+    } catch (error) {
+
+        alert("Review failed");
+
+    }
+}
+
+loadBooks();
 displayCart();
 
 </script>
