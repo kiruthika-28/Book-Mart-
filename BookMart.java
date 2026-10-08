@@ -12,7 +12,7 @@ public class BookMartServer {
 
     static final String DB_URL = "jdbc:mysql://localhost:3306/bookmart";
     static final String DB_USER = "root";
-    static final String DB_PASSWORD = "YOUR_MYSQL_PASSWORD";
+    static final String DB_PASSWORD = "1234";
 
     public static void main(String[] args) throws Exception {
 
